@@ -1,10 +1,14 @@
-from pathlib import Path
-from craftlet.utils.mappers import repoUrlToZipUrl
-import httpx
-from zipfile import ZipFile
-from io import BytesIO
+from typing import List
 import json
+from io import BytesIO
+from pathlib import Path
+from typing import Dict
+from zipfile import ZipFile
+
+import httpx
+
 from craftlet.utils.helperFunctions import CLIFunctions
+from craftlet.utils.mappers import repoUrlToZipUrl
 
 
 class CraftLet:
@@ -26,8 +30,8 @@ class CraftLet:
             templateConfig = CraftLet.loadTemplateConfigFile(
                 zipFileInstance=z, root=root
             )
-            personalTemplateConfig = CLIFunctions.buildConfigFromDict(
-                dictFile=templateConfig
+            personalTemplateConfig, environmentVariables = (
+                CLIFunctions.buildConfigFromDict(dictFile=templateConfig)
             )
 
             for name in z.namelist():
@@ -40,6 +44,8 @@ class CraftLet:
                 rawText = z.read(name).decode()
                 dest.write_text(rawText)
 
+            CraftLet.configureEnvironmentVariables(environmentVariables=environmentVariables, targetDir=targetDestination)
+
     @staticmethod
     def loadTemplateConfigFile(zipFileInstance: ZipFile, root: str):
         try:
@@ -47,3 +53,11 @@ class CraftLet:
             return json.loads(raw)
         except KeyError:
             return {}
+
+    @staticmethod
+    def configureEnvironmentVariables(environmentVariables: Dict[str, str], targetDir: Path):
+        envPath = targetDir / ".env"
+        lines: List[str] = []
+        for key,value in environmentVariables.items():
+            lines.append(f"{key}={value}")
+        envPath.write_text(("\n").join(lines))

@@ -13,7 +13,7 @@ from craftlet.utils.mappers import repoUrlToZipUrl
 
 class CraftLet:
     @staticmethod
-    async def loadTemplateGithub(repoUrl: str, targetDir: Path):
+    async def loadTemplateGithub(repoUrl: str, targetDir: Path, generateEnv: bool):
         zipUrl = repoUrlToZipUrl(repoUrl=repoUrl)
 
         async with httpx.AsyncClient() as client:
@@ -21,10 +21,10 @@ class CraftLet:
             response.raise_for_status()
             zipBytes = response.content
 
-        CraftLet.diskWrite(inputBytes=zipBytes, targetDestination=targetDir)
+        CraftLet.diskWrite(inputBytes=zipBytes, targetDestination=targetDir, generateEnv=generateEnv)
 
     @staticmethod
-    def diskWrite(inputBytes: bytes, targetDestination: Path):
+    def diskWrite(inputBytes: bytes, targetDestination: Path, generateEnv: bool):
         with ZipFile(BytesIO(inputBytes)) as z:
             root = z.namelist()[0].split("/")[0]
             templateConfig = CraftLet.loadTemplateConfigFile(
@@ -43,8 +43,8 @@ class CraftLet:
 
                 rawText = z.read(name).decode()
                 dest.write_text(rawText)
-
-            CraftLet.configureEnvironmentVariables(environmentVariables=environmentVariables, targetDir=targetDestination)
+            if generateEnv:
+                CraftLet.configureEnvironmentVariables(environmentVariables=environmentVariables, targetDir=targetDestination)
 
     @staticmethod
     def loadTemplateConfigFile(zipFileInstance: ZipFile, root: str):

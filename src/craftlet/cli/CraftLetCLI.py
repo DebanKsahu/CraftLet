@@ -13,16 +13,19 @@ class CraftLetCLI:
         github: bool = typer.Option(
             default=False, help="Load Template From GitHub thorugh GitHub repo URL"
         ),
+        generateEnv: bool = typer.Option(
+            default=False, help="Is Yes then it will environment variable file(.env)"
+        )
     ):
         if github:
-            asyncio.run(CraftLetCLI.loadTemplateFromGithub())
+            asyncio.run(CraftLetCLI.loadTemplateFromGithub(generateEnv=generateEnv))
 
     @staticmethod
-    async def loadTemplateFromGithub():
+    async def loadTemplateFromGithub(generateEnv: bool):
         templateUrl = typer.prompt(text="Enter Template Repo URL: ")
         projectName = typer.prompt(text="Enter The Project Name")
         await CraftLet.loadTemplateGithub(
-            repoUrl=templateUrl, targetDir=Path.cwd() / projectName
+            repoUrl=templateUrl, targetDir=Path.cwd() / projectName, generateEnv=generateEnv
         )
 
     @staticmethod

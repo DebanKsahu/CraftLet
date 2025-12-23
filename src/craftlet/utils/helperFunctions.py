@@ -1,6 +1,10 @@
+import os
+import platform
 from io import StringIO
-import typer
+from pathlib import Path
 from typing import Dict
+
+import typer
 
 
 class CLIFunctions:
@@ -47,3 +51,16 @@ class CLIFunctions:
                 )
             prefixName.truncate(beforeLength)
             prefixName.seek(beforeLength)
+
+
+class CacheFunction:
+    @staticmethod
+    def getOSCacheDir():
+        system = platform.system()
+        match system:
+            case "Windows":
+                return Path(os.environ["LOCALAPPDATA"])
+            case "Darwin":
+                return Path.home() / "Library" / "Caches"
+            case _:
+                return Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))

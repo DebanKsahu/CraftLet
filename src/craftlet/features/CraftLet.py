@@ -1,8 +1,7 @@
-from typing import List
 import json
 from io import BytesIO
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 from zipfile import ZipFile
 
 import httpx
@@ -13,15 +12,28 @@ from craftlet.utils.mappers import repoUrlToZipUrl
 
 class CraftLet:
     @staticmethod
-    async def loadTemplateGithub(repoUrl: str, targetDir: Path, generateEnv: bool):
+    async def getTemplateBytesGithub(repoUrl: str):
         zipUrl = repoUrlToZipUrl(repoUrl=repoUrl)
 
         async with httpx.AsyncClient() as client:
             response = await client.get(zipUrl)
             response.raise_for_status()
             zipBytes = response.content
+        return zipBytes
 
-        CraftLet.diskWrite(inputBytes=zipBytes, targetDestination=targetDir, generateEnv=generateEnv)
+    @staticmethod
+    async def loadTemplateGithub(repoUrl: str, targetDir: Path, generateEnv: bool):
+        # zipUrl = repoUrlToZipUrl(repoUrl=repoUrl)
+
+        # async with httpx.AsyncClient() as client:
+        #     response = await client.get(zipUrl)
+        #     response.raise_for_status()
+        #     zipBytes = response.content
+        zipBytes = await CraftLet.getTemplateBytesGithub(repoUrl=repoUrl)
+
+        CraftLet.diskWrite(
+            inputBytes=zipBytes, targetDestination=targetDir, generateEnv=generateEnv
+        )
 
     @staticmethod
     def diskWrite(inputBytes: bytes, targetDestination: Path, generateEnv: bool):
@@ -44,7 +56,10 @@ class CraftLet:
                 rawText = z.read(name).decode()
                 dest.write_text(rawText)
             if generateEnv:
-                CraftLet.configureEnvironmentVariables(environmentVariables=environmentVariables, targetDir=targetDestination)
+                CraftLet.configureEnvironmentVariables(
+                    environmentVariables=environmentVariables,
+                    targetDir=targetDestination,
+                )
 
     @staticmethod
     def loadTemplateConfigFile(zipFileInstance: ZipFile, root: str):
@@ -55,9 +70,11 @@ class CraftLet:
             return {}
 
     @staticmethod
-    def configureEnvironmentVariables(environmentVariables: Dict[str, str], targetDir: Path):
+    def configureEnvironmentVariables(
+        environmentVariables: Dict[str, str], targetDir: Path
+    ):
         envPath = targetDir / ".env"
         lines: List[str] = []
-        for key,value in environmentVariables.items():
+        for key, value in environmentVariables.items():
             lines.append(f"{key}={value}")
         envPath.write_text(("\n").join(lines))

@@ -1,11 +1,13 @@
 import json
+import tarfile
 from io import BytesIO
 from pathlib import Path
 from typing import Dict, List
-from zipfile import ZipFile
+from zipfile import ZIP_DEFLATED, ZipFile
 
 import httpx
 
+from craftlet.utils.exceptions import CraftLetException
 from craftlet.utils.helperFunctions import CLIFunctions
 from craftlet.utils.mappers import repoUrlToZipUrl
 
@@ -23,17 +25,38 @@ class CraftLet:
 
     @staticmethod
     async def loadTemplateGithub(repoUrl: str, targetDir: Path, generateEnv: bool):
-        # zipUrl = repoUrlToZipUrl(repoUrl=repoUrl)
-
-        # async with httpx.AsyncClient() as client:
-        #     response = await client.get(zipUrl)
-        #     response.raise_for_status()
-        #     zipBytes = response.content
         zipBytes = await CraftLet.getTemplateBytesGithub(repoUrl=repoUrl)
 
         CraftLet.diskWrite(
             inputBytes=zipBytes, targetDestination=targetDir, generateEnv=generateEnv
         )
+
+    @staticmethod
+    def loadTemplateLocal(
+        templatePath: Path, targetDestination: Path, generateEnv: bool
+    ):
+        tarFilePath = templatePath / "template.tar.gz"
+        if tarFilePath.is_file() and tuple(tarFilePath.suffixes) == (".tar", ".gz"):
+            zipBuffer = BytesIO()
+            with (
+                tarfile.open(tarFilePath, "r:gz") as tarObj,
+                ZipFile(zipBuffer, "w", compression=ZIP_DEFLATED) as zipObj,
+            ):
+                for member in tarObj.getmembers():
+                    if member.isfile():
+                        extractedFile = tarObj.extractfile(member)
+                        if extractedFile is not None:
+                            tempStore = BytesIO()
+                            while chunk := extractedFile.read(1024 * 1024):
+                                tempStore.write(chunk)
+                            zipObj.writestr(member.name, tempStore.getvalue())
+            CraftLet.diskWrite(
+                inputBytes=zipBuffer.getvalue(),
+                targetDestination=targetDestination,
+                generateEnv=generateEnv,
+            )
+        else:
+            raise CraftLetException(errorMessage="Template File doesn't exist")
 
     @staticmethod
     def diskWrite(inputBytes: bytes, targetDestination: Path, generateEnv: bool):

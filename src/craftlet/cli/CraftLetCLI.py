@@ -20,22 +20,68 @@ class CraftLetCLI:
         github: bool = typer.Option(
             default=False, help="Load Template From GitHub thorugh GitHub repo URL"
         ),
-        generateEnv: bool = typer.Option(
+        local: bool = typer.Option(
+            default=False, help="Load Template From Local Cache"
+        ),
+        local_profile: str = typer.Argument(
+            default=None, help="Load Template From Online Profile Cache"
+        ),
+        generate_env: bool = typer.Option(
             default=False, help="Is Yes then it will environment variable file(.env)"
         ),
     ):
         if github:
-            asyncio.run(CraftLetCLI.loadTemplateFromGithub(generateEnv=generateEnv))
+            asyncio.run(CraftLetCLI.loadTemplateFromGithub(generateEnv=generate_env))
+        elif local:
+            CraftLetCLI.loadTemplateFromLocal(
+                generateEnv=generate_env, localProfile=local_profile
+            )
+        else:
+            asyncio.run(CraftLetCLI.loadTemplateFromGithub(generateEnv=generate_env))
 
     @staticmethod
     async def loadTemplateFromGithub(generateEnv: bool):
-        template_url = typer.prompt(text="Enter Template Repo URL: ")
+        templateUrl = typer.prompt(text="Enter Github Template Repo URL: ")
         projectName = typer.prompt(text="Enter The Project Name")
         await CraftLet.loadTemplateGithub(
-            repoUrl=template_url,
+            repoUrl=templateUrl,
             targetDir=Path.cwd() / projectName,
             generateEnv=generateEnv,
         )
+
+    @staticmethod
+    def loadTemplateFromLocal(generateEnv: bool, localProfile: str | None):
+        templateSource = typer.prompt("Enter the source of template: ")
+        templateName = typer.prompt(text="Enter The name of the template: ")
+        projectName = typer.prompt(text="Enter The Project Name: ")
+        if localProfile is None:
+            if CraftLetCache.isRunningInEnvironment():
+                exactPath = (
+                    Path(sys.prefix)
+                    / "craftlet"
+                    / ".cache"
+                    / "offline"
+                    / "template"
+                    / templateSource
+                    / templateName
+                )
+            else:
+                exactPath = (
+                    CacheFunction.getOSCacheDir()
+                    / "craftlet"
+                    / ".cache"
+                    / "offline"
+                    / "template"
+                    / templateSource
+                    / templateName
+                )
+            CraftLet.loadTemplateLocal(
+                templatePath=exactPath,
+                targetDestination=Path.cwd() / projectName,
+                generateEnv=generateEnv,
+            )
+        else:
+            pass
 
     @app.command()
     @staticmethod

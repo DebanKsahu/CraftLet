@@ -42,7 +42,7 @@ CraftLet is ideal for project maintainers who want to distribute boilerplate cod
 
 This project is part of the CraftLet ecosystem. For a complete solution, explore these related repositories:
 
-- **[craftletKMP](https://github.com/your-username/craftletKMP)** - Frontend application built with Kotlin Multiplatform (KMP). Provides a user-friendly interface for template management and project creation.
+- **[craftletKMP](https://github.com/DebanKsahu/craftletKMP)** - Frontend application built with Kotlin Multiplatform (KMP). Provides a user-friendly interface for template management and project creation.
 - **[craftlet-server](https://github.com/DebanKsahu/CraftLet_Server)** - Backend API server. Handles template storage, user management, and provides services that the CLI utilizes for extended functionality.
 
 The CraftLet CLI works in conjunction with these services to deliver a complete project templating and scaffolding solution.

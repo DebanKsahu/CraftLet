@@ -31,7 +31,6 @@ class DirectoryTree:
             return
         else:
             if currPath.is_file() and currPath.suffix.lower() == ".py":
-                print(currPath)
                 newNode = DirectoryTreeNode(name=currPath.name, isModule=True)
                 if parentNode.children is not None:
                     parentNode.children.append(newNode)

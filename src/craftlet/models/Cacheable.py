@@ -11,7 +11,7 @@ class Cacheable(Protocol):
 
 
 @dataclass
-class GithubTemplateReference(Cacheable):
+class GithubTemplateReference:
     name: str
     coreData: str
     isVersionRequire: ClassVar[bool] = False
@@ -19,7 +19,7 @@ class GithubTemplateReference(Cacheable):
     payload: Dict[str, Any] | None = None
 
 @dataclass
-class GithubTemplate(Cacheable):
+class GithubTemplate:
     name: str
     coreData: bytes
     isVersionRequire: ClassVar[bool] = True

@@ -17,15 +17,9 @@ class CraftLetCLI:
     @app.command()
     @staticmethod
     def load_template(
-        github: bool = typer.Option(
-            default=False, help="Load Template From GitHub thorugh GitHub repo URL"
-        ),
-        local: bool = typer.Option(
-            default=False, help="Load Template From Local Cache"
-        ),
-        local_profile: str = typer.Argument(
-            default=None, help="Load Template From Online Profile Cache"
-        ),
+        github: bool = typer.Option(default=False, help="Load Template From GitHub thorugh GitHub repo URL"),
+        local: bool = typer.Option(default=False, help="Load Template From Local Cache"),
+        local_profile: str = typer.Argument(default=None, help="Load Template From Online Profile Cache"),
         generate_env: bool = typer.Option(
             default=False, help="Is Yes then it will environment variable file(.env)"
         ),
@@ -33,9 +27,7 @@ class CraftLetCLI:
         if github:
             asyncio.run(CraftLetCLI.loadTemplateFromGithub(generateEnv=generate_env))
         elif local:
-            CraftLetCLI.loadTemplateFromLocal(
-                generateEnv=generate_env, localProfile=local_profile
-            )
+            CraftLetCLI.loadTemplateFromLocal(generateEnv=generate_env, localProfile=local_profile)
         else:
             asyncio.run(CraftLetCLI.loadTemplateFromGithub(generateEnv=generate_env))
 
@@ -93,9 +85,7 @@ class CraftLetCLI:
         if CraftLetCache.isRunningInEnvironment():
             exactPath = Path(sys.prefix) / "craftlet" / ".cache" / specific_folder
         else:
-            exactPath = (
-                CacheFunction.getOSCacheDir() / "craftlet" / ".cache" / specific_folder
-            )
+            exactPath = CacheFunction.getOSCacheDir() / "craftlet" / ".cache" / specific_folder
         CraftLetCache.showCache(cacheDir=exactPath)
 
     @app.command()
@@ -122,9 +112,7 @@ class CraftLetCLI:
                     try:
                         loop = asyncio.get_running_loop()
                     except RuntimeError:
-                        templateBytes = asyncio.run(
-                            CraftLet.getTemplateBytesGithub(template_url)
-                        )
+                        templateBytes = asyncio.run(CraftLet.getTemplateBytesGithub(template_url))
                     else:
                         future = asyncio.run_coroutine_threadsafe(
                             CraftLet.getTemplateBytesGithub(template_url), loop
@@ -140,13 +128,9 @@ class CraftLetCLI:
                         },
                     )
                 if CraftLetCache.isRunningInEnvironment():
-                    CraftLetCache.cacheOffline(
-                        path=Path(sys.prefix), data=cacheableData
-                    )
+                    CraftLetCache.cacheOffline(path=Path(sys.prefix), data=cacheableData)
                 else:
-                    CraftLetCache.cacheOffline(
-                        path=CacheFunction.getOSCacheDir(), data=cacheableData
-                    )
+                    CraftLetCache.cacheOffline(path=CacheFunction.getOSCacheDir(), data=cacheableData)
             case _:
                 raise CraftLetException(f"Unrecognized platform({templatePlatform})")
 

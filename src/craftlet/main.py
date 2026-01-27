@@ -1,6 +1,6 @@
 import typer
 
-from craftlet.cli.CraftLetCLI import CraftLetCLI
+from craftlet.cli.CraftLetCLI import craftletCliApp
 
 app = typer.Typer(name="CraftLet", help="Entry Point of CraftLet CLI tool")
-CraftLetCLI.registerTo(app=app)
+app.add_typer(craftletCliApp)

@@ -86,6 +86,7 @@ dependencies = [
     { name = "cbor2" },
     { name = "httpx" },
     { name = "readchar" },
+    { name = "rich" },
     { name = "typer" },
 ]
 
@@ -100,6 +101,7 @@ requires-dist = [
     { name = "cbor2", specifier = ">=5.7.1" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "readchar", specifier = ">=4.2.1" },
+    { name = "rich", specifier = ">=14.2.0" },
     { name = "typer", specifier = ">=0.20.0" },
 ]
 

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional, Tuple
 
 import readchar
 from readchar import key as rkey
@@ -9,20 +9,43 @@ from rich.panel import Panel
 from rich.table import Table
 
 
-def render(options, current, selected, title):
-    table = Table.grid(expand=True)
-    table.add_column(justify="right", width=4)
-    table.add_column(ratio=1)
+def render(
+    options: List[Tuple[str, List[List[str]]]],
+    current: int,
+    selected: set,
+    title: str,
+    abouts: List[str] | None = None,
+):
+    optsTable = Table.grid(expand=True)
+    optsTable.add_column(justify="right", width=4)
+    optsTable.add_column(ratio=1)
 
-    for i, opt in enumerate(options, 1):
+    for i, (opt, _) in enumerate(options, 1):
         mark = "[bold green]✔[/]" if i in selected else "○"
         row = f"{mark}  {opt}"
         if i - 1 == current:
             row = f"[reverse]{row}[/reverse]"
-        table.add_row(f"{i}.", row)
+        optsTable.add_row(f"{i}.", row)
+
+    aboutText = "No description."
+    if abouts and 0 <= current < len(abouts):
+        aboutText = abouts[current] or "No description."
+
+    aboutPanel = Panel(
+        aboutText,
+        title="About",
+        padding=(1, 2),
+        box=box.ROUNDED,
+        expand=True,
+    )
+
+    outer = Table.grid(expand=True)
+    outer.add_column(ratio=2)
+    outer.add_column(ratio=3)
+    outer.add_row(optsTable, aboutPanel)
 
     return Panel(
-        table,
+        outer,
         title=title,
         subtitle="↑/↓ move • Space toggle • Enter confirm • q quit",
         padding=(1, 2),
@@ -31,13 +54,20 @@ def render(options, current, selected, title):
     )
 
 
-def multiSelect(options: List[str], title: str, richConsole: Console) -> List[str]:
+def multiSelect(
+    options: List[Tuple[str, List[List[str]]]],
+    title: str,
+    richConsole: Console,
+    abouts: Optional[List[str]] = None,
+) -> Tuple[List[Tuple[str, List[List[str]]]], List[Tuple[str, List[List[str]]]]]:
     current = 0
-    selected: set[int] = set()
+    selected: set[int] = set(range(1, len(options) + 1))
 
     try:
         with Live(
-            render(options, current, selected, title), console=richConsole, refresh_per_second=20
+            render(options, current, selected, title, abouts),
+            console=richConsole,
+            refresh_per_second=20,
         ) as live:
             while True:
                 try:
@@ -62,13 +92,26 @@ def multiSelect(options: List[str], title: str, richConsole: Console) -> List[st
                     selected.clear()
                     break
 
-                live.update(render(options, current, selected, title))
+                live.update(render(options, current, selected, title, abouts))
     except KeyboardInterrupt:
         selected.clear()
+    selectedOptions = []
+    unSelectedOptions = []
+    for i in range(1, len(options) + 1):
+        if i in selected:
+            selectedOptions.append(options[i - 1])
+        else:
+            unSelectedOptions.append(options[i - 1])
+    return selectedOptions, unSelectedOptions
 
-    return [options[i - 1] for i in sorted(selected)]
 
-
-def CliRadioButton(options: List[str], title: str, richConsole: Console):
-    selectedOptions = multiSelect(options=options, title=title, richConsole=richConsole)
-    richConsole.print("\n[bold green]Selected:[/]", selectedOptions)
+def cliRadioButton(
+    options: List[Tuple[str, List[List[str]]]],
+    title: str,
+    richConsole: Console,
+    abouts: Optional[List[str]] = None,
+):
+    selectedOptions, unSelectedOptions = multiSelect(
+        options=options, title=title, richConsole=richConsole, abouts=abouts
+    )
+    return selectedOptions, unSelectedOptions

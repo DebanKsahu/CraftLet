@@ -20,6 +20,8 @@ class CLIFunctions:
                 value["input"] = userInput
                 if "isEnv" in value and value.get("isEnv", False):
                     environmentVariables[prefixName.getvalue()] = userInput
+            elif key=="ProjectPlugin":
+                continue
             else:
                 CLIFunctions.nestedBuildFromDict(
                     dictFile=value,
